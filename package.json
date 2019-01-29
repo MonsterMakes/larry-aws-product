@@ -1,0 +1,46 @@
+{
+	"name": "larry-aws-product",
+	"description": "Larry Cli Module to expose an aws cloud formation template as a cli.",
+	"version": "0.0.1",
+	"publishConfig": {},
+	"bin": {},
+	"files": [
+		"bin",
+		"src",
+		"CHANGELOG.md",
+		"index.js",
+		"README.md",
+		"!.DS_Store"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/@lockenj/larry-aws-product"
+	},
+	"license": "MIT",
+	"scripts": {
+		"start": "echo '=> This is a library project and therefore has no server component. Exiting...' && exit 0",
+		"test": "echo '=> Verifying...' && npm run clean && npm run lint && npm run test-unit-coverage",
+		"readiness-check": "echo '=> Checking Readiness' && npm test",
+		"prepublishOnly": "npm test",
+		"clean": "echo '=> Cleaning built assets...' && rm -rf .nyc_output coverage",
+		"lint": "echo '=> Linting...' && eslint {src,test}/**/*.js",
+		"lint-fix": "echo '=> Fixing Linting errors...' && eslint {src,test}/**/*.js --fix",
+		"test-unit": "echo '=> Running Tests...' && mocha -u tdd --timeout 60000 --colors test/unit/**/*.spec.js",
+		"watch-test-unit": "echo '=> Running Test Watcher...' && mocha --watch test/unit/**/*.spec.js",
+		"test-unit-coverage": "echo '=> Running Tests w/ Coverage...' && nyc npm run test-unit && nyc --reporter=html report && nyc --lines 80 --functions 80 --branches 80 --per-file check-coverage"
+	},
+	"dependencies": {
+		"@monstermakes/larry-cli": "^0.1.2",
+		"aws-sdk": "^2.395.0",
+		"lodash": "^4.17.11"
+	},
+	"devDependencies": {
+		"@monstermakes/larry-infrastructure": "^0.0.1",
+		"chai": "^4.2.0",
+		"chai-as-promised": "^7.1.1",
+		"chai-files": "^1.4.0",
+		"eslint": "^4.17.0",
+		"mocha": "^5.2.0",
+		"nyc": "^11.4.1"
+	}
+}
