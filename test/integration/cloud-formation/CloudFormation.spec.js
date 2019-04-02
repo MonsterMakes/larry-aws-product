@@ -3,7 +3,7 @@ const chai = require('chai');
 const should = chai.should();//eslint-disable-line
 const expect = chai.expect;//eslint-disable-line
 
-const TEST_NAME = 'Test Cloud Formation deployment utils';
+const TEST_NAME = 'Test Cloud Formation deployment Service';
 const CloudFormation = require('../../../src/aws/services/CloudFormation');
 
 /*

@@ -1,7 +1,7 @@
 {
 	"name": "@monstermakes/larry-aws-product",
 	"description": "Larry Cli Module to expose an aws cloud formation template as a cli.",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"publishConfig": {},
 	"bin": {},
 	"files": [
@@ -31,7 +31,7 @@
 	},
 	"dependencies": {
 		"@monstermakes/larry-cli": "^0.1.2",
-		"aws-sdk": "^2.395.0",
+		"aws-sdk": "^2.433.0",
 		"lodash": "^4.17.11"
 	},
 	"devDependencies": {
