@@ -10,7 +10,7 @@ class ParameterStore extends AwsParameterStore {
 	_getAwsTagsFromPlainObject(tagsObj){
 		let awsTags = [];
 		if(_.isObject(tagsObj)){
-			Object.keys(tagsObj).forEach((tagName)=>{
+			Object.getOwnPropertyNames(tagsObj).forEach((tagName)=>{
 				awsTags.push({
 					Key: tagName,
 					Value: tagsObj[tagName]
@@ -19,36 +19,65 @@ class ParameterStore extends AwsParameterStore {
 		}
 		return awsTags;
 	}
+	_getAwsParamFromDefinition(paramDef,opts={overwrite:true,tags:undefined}){
+		let awsParam = {};
+		
+		return awsParam;
+	}
 	_getAwsParamsFromDefinition(paramsDefinition,opts={overwrite:true,tags:undefined}){
 		let awsParams = {};
-		
-		if(_.isObject(paramsDefinition)){
-			Object.keys(paramsDefinition).forEach((pDef)=>{
-				if(_.isPlainObject(paramsDefinition[pDef])){
-					let tags = this._getAwsTagsFromPlainObject(_.merge({},opts.tags,paramsDefinition[pDef].tags));
-					awsParams[pDef] = _.merge(
+
+		if(_.isPlainObject(paramsDefinition)){
+			//Decided to only support crawling own properties (when running in chai it adds the extra 'should' property)
+			Object.getOwnPropertyNames(paramsDefinition).forEach((pName)=>{
+				let paramDef = paramsDefinition[pName];
+				if(_.isPlainObject(paramDef)){
+					let tags = this._getAwsTagsFromPlainObject(_.merge({},opts.tags || opts.Tags,paramDef.tags));
+					awsParams[pName] = _.merge(
 						{},
 						{
-							Type: paramsDefinition[pDef].type || 'String',
-							Name: paramsDefinition[pDef].name || pDef,  //hidden feature for complex names
-							Overwrite: paramsDefinition[pDef].overwrite || opts.overwrite, //hidden feature for complex use cases
-							Description: paramsDefinition[pDef].description || '',
+							Type: paramDef.type || paramDef.Type || 'String',
+							Name: paramDef.name || paramDef.Name || paramDef,  //hidden feature for complex names
+							Overwrite: paramDef.overwrite || opts.overwrite, //hidden feature for complex use cases
+							Description: paramDef.description || paramDef.Description || '',
 							Tags: tags //hidden feature for param specific tags (dont see a use case at this point but supported as a hidden feature)
 						},
-						paramsDefinition[pDef]
+						paramDef
 					);
 				}
-				else if(_.isString(paramsDefinition[pDef])){
-					awsParams[pDef] = {
+				else if(_.isString(paramDef)){
+					awsParams[pName] = {
 						Type: 'String',
-						Name: pDef,
-						Value: paramsDefinition[pDef],
+						Name: pName,
+						Value: paramDef,
 						Overwrite: opts.overwrite,
 						Tags: this._getAwsTagsFromPlainObject(opts.tags)
 					};
 				}
 				else{
-					throw new Error(`Invalid Parameter Definition (${pDef}) must be either a string or an object defining the AWS parameter.`);
+					throw new Error(`Invalid Parameter Definition (${paramDef}) must be either a string or an object defining the AWS parameter.`);
+				}
+			});
+		}
+		else if(_.isArray(paramsDefinition)){
+			paramsDefinition.forEach((paramDef)=>{
+				if(_.isPlainObject(paramDef)){
+					let tags = this._getAwsTagsFromPlainObject(_.merge({},opts.tags || opts.Tags,paramDef.tags));
+					let awsParam = _.merge(
+						{},
+						{
+							Type: paramDef.type || paramDef.Type || 'String',
+							Name: paramDef.name || paramDef.Name || paramDef,  //hidden feature for complex names
+							Overwrite: paramDef.overwrite || opts.overwrite, //hidden feature for complex use cases
+							Description: paramDef.description || paramDef.Description || '',
+							Tags: tags //hidden feature for param specific tags (dont see a use case at this point but supported as a hidden feature)
+						},
+						paramDef
+					);
+					awsParams[awsParam.Name] = awsParam;
+				}
+				else{
+					throw new Error(`Invalid Parameter Definition (${paramDef}) must be either a string or an object defining the AWS parameter.`);
 				}
 			});
 		}
@@ -62,7 +91,9 @@ class ParameterStore extends AwsParameterStore {
 	 * @property {String} [description] - A user friendly description of this parameter.
 	 */
 	/**
-	 * Create parameters
+	 * 
+	 * Create parameters in the Parameter Store
+	 * TODO this will short circuit if one fails, should we do best effort?
 	 * @param {Object<String,ParamsObjectDefinition|String} paramsDefinition - An object where the keys are the parameter names and the values can either be a string or a complex object describing parameter attributes in addition to just value.
 	 * @param {Object<String,String>} [tags={}] - A set of tags to apply to all parameters. Each property/value in the object will create a tag where the property name is used as the tag name and the value will be used as the tag value.
 	 */
@@ -71,7 +102,7 @@ class ParameterStore extends AwsParameterStore {
 		// more specifically this code will leave params around maybe they should be cleaned up
 		let awsParamsDef = this._getAwsParamsFromDefinition(paramsDefinition,{tags,overwrite:false});
 		let prom = Promise.resolve();
-		Object.keys(awsParamsDef).forEach((paramName)=>{
+		Object.getOwnPropertyNames(awsParamsDef).forEach((paramName)=>{
 			prom = prom
 				.then(()=>{
 					return BackoffUtils.exponentialBackoff(
@@ -82,8 +113,16 @@ class ParameterStore extends AwsParameterStore {
 									return createResponse;
 								})
 								.catch(e=>{
-									if(e){
+									if(e.code === 'ThrottlingException'){
 										return false; //backoff and try again
+									}
+									else if(e.code === 'ParameterAlreadyExists'){
+										let err = new Error(`Parameter (${paramName}) already exists and cannot be created, try using update() instead.`);
+										err.originalError = e;
+										return Promise.reject(err);
+									}
+									else{
+										return Promise.reject(e);
 									}
 								});
 						},
@@ -91,16 +130,6 @@ class ParameterStore extends AwsParameterStore {
 						50, //give up after 50 times
 						30000 //dont delay any more than 30 seconds
 					);
-				})
-				.catch(e=>{
-					if(e.code === 'ParameterAlreadyExists'){
-						let err = new Error(`Parameter (${paramName}) already exists and cannot be created, try using update() instead.`);
-						err.originalError = e;
-						return Promise.reject(err);
-					}
-					else{
-						return Promise.reject(e);
-					}
 				});
 		});
 		return prom;
@@ -108,12 +137,11 @@ class ParameterStore extends AwsParameterStore {
 	/**
 	 * Create or update parameters
 	 * @param {Object<String,ParamsObjectDefinition|String} paramsDefinition - An object where the keys are the parameter names and the values can either be a string or a complex object describing parameter attributes in addition to just value.
-	 * @param {Object<String,String>} [tags={}] - A set of tags to apply to all parameters. Each property/value in the object will create a tag where the property name is used as the tag name and the value will be used as the tag value.
 	 */
-	upsert(paramsDefinition,tags={}){
-		let awsParamsDef = this._getAwsParamsFromDefinition(paramsDefinition,{tags,overwrite:true});
+	update(paramsDefinition){
+		let awsParamsDef = this._getAwsParamsFromDefinition(paramsDefinition,{overwrite:true});
 		let prom = Promise.resolve();
-		Object.keys(awsParamsDef).forEach((paramName)=>{
+		Object.getOwnPropertyNames(awsParamsDef).forEach((paramName)=>{
 			prom = prom
 				.then(()=>{
 					return BackoffUtils.exponentialBackoff(
@@ -124,8 +152,11 @@ class ParameterStore extends AwsParameterStore {
 									return createResponse;
 								})
 								.catch(e=>{
-									if(e){
+									if(e.code === 'ThrottlingException'){
 										return false; //backoff and try again
+									}
+									else{
+										return Promise.reject(e);
 									}
 								});
 						},
@@ -187,8 +218,6 @@ class ParameterStore extends AwsParameterStore {
 			return prom;
 		}
 	}
-	//TODO
-	//upsertParameter
 	/**
 	 * Retireve the parameter or reject if not found.
 	 * @param {String} paramName - A parameter name to be retrieved.
@@ -204,7 +233,10 @@ class ParameterStore extends AwsParameterStore {
 	 * @param {Array.<String>} paramNames - An array of parameter names to be retrieved.
 	 */
 	retrieveMultiple(paramNames){
-		return this.getParameters({Names: paramNames});
+		return this.getParameters({Names: paramNames})
+			.then((getResponse)=>{
+				return getResponse.Parameters;
+			});
 	}
 	retrieveAllByPath(path){
 		let nextToken = undefined;

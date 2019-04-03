@@ -44,7 +44,7 @@ describe(TEST_NAME, () => {
 				'param2': '345'
 			},
 			{
-				Tags: {
+				tags: {
 					Environment: 'special'
 				}
 			});

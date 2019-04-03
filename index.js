@@ -7,5 +7,6 @@ module.exports.cliModules = {
 	Aws: require('./src/cli-modules/Aws.cli-module')
 };
 module.exports.services = {
-	CloudFormation: require('./src/aws/services/CloudFormation')
+	CloudFormation: require('./src/aws/services/CloudFormation'),
+	ParameterStore: require('./src/aws/services/ParameterStore')
 };

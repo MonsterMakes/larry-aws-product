@@ -49,16 +49,7 @@ describe(TEST_NAME, () => {
 			'/env/foo/testee9': 'val',
 			'/env/foo/testee10': 'val',
 			'/env/foo/testee11': 'val',
-			'/env/foo/testee12': 'val',
-			'/env/foo/testee13': 'val',
-			'/env/foo/testee14': 'val',
-			'/env/foo/testee15': 'val',
-			'/env/foo/testee16': 'val',
-			'/env/foo/testee17': 'val',
-			'/env/foo/testee18': 'val',
-			'/env/foo/testee19': 'val',
-			'/env/foo/testee20': 'val',
-			'/env/foo/testee21': 'val',
+			'/env/foo/testee12': 'val'
 		};
 		return Promise.resolve()
 			.then(()=>{
