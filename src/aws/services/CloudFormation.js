@@ -185,7 +185,6 @@ class CloudFormation extends AwsCloudFormation {
 		return Promise.resolve()
 			.then(()=>{
 				//TODO normalize params
-				//TODO handle update or create
 				return this.createStack({
 					TemplateBody: cfTemplate,
 					StackName: name,
@@ -193,6 +192,21 @@ class CloudFormation extends AwsCloudFormation {
 					Capabilities: opts.capabilities,
 					Tags: opts.tags
 				});
+			})
+			//Capturing Create Failure reason to run stack update for Existing stack
+			.catch((createError)=>{
+				if ('AlreadyExistsException' == createError.code){
+					return this.updateStack({
+						TemplateBody: cfTemplate,
+						StackName: name,
+						Parameters: params,
+						Capabilities: opts.capabilities,
+						Tags: opts.tags
+					});
+				}
+				else{
+					return Promise.reject(createError);
+				}
 			})
 			.then((createResponse)=>{
 				let stackId = createResponse.StackId;
