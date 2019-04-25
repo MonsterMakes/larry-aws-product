@@ -80,6 +80,40 @@ class AwsCloudFormation extends AwsBase {
 		});
 	}
 	/**
+	 * @typedef CfTag
+	 * @type {Object}
+	 * @property {String} Key - A string used to identify this tag. You can specify a maximum of 128 characters for a tag key. Tags owned by Amazon Web Services (AWS) have the reserved prefix: aws:.
+	 * @property {String} Value - A string containing the value for this tag. You can specify a maximum of 256 characters for a tag value.
+	 */
+	/**
+	 * @typedef CfParameter
+	 * @type {Object}
+	 * @property {String} ParameterKey - The key associated with the parameter. If you don't specify a key and value for a particular parameter, AWS CloudFormation uses the default value that is specified in your template.
+	 * @property {String} ParameterValue - The input value associated with the parameter
+	 */
+	/**
+	 * For more information see the aws SDK docs https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CloudFormation.html#updateStack-property.
+	 * @param {Object} params - An object that defines the cloudformation template to be validated.
+	 * @param {String} params.TemplateBody - Structure containing the template body with a minimum length of 1 byte and a maximum length of 51,200 bytes. For more information, go to Template Anatomy in the AWS CloudFormation User Guide.
+	 * @param {String} params.TemplateURL - Location of file containing the template body. The URL must point to a template (max size: 460,800 bytes) that is located in an Amazon S3 bucket. For more information, go to Template Anatomy in the AWS CloudFormation User Guide.
+	 * @param {String} params.StackName - The name that is associated with the stack. The name must be unique in the region in which you are creating the stack.
+	 * @param {Array.<CfParameter>} params.Parameters - A list of Parameter structures that specify input parameters for the stack. For more information, see the Parameter data type.
+	 * @param {Array.<String>} params.Capabilities - In some cases, you must explicity acknowledge that your stack template contains certain capabilities in order for AWS CloudFormation to update the stack. Example (CAPABILITY_IAM or CAPABILITY_NAMED_IAM) 
+	 * @param {Array.<CfTag>} Tags - Key-value pairs to associate with this stack. AWS CloudFormation also propagates these tags to the resources created in the stack. A maximum number of 50 tags can be specified.
+	 */
+	updateStack(params={}){
+		return new Promise((resolve, reject) => {
+			this._awsCloudFormationSdk.updateStack(params, (err, data) => {
+				if (err) {
+					reject(err);
+				}
+				else {
+					resolve(data);
+				}
+			});
+		});
+	}
+	/**
 	 * For more information see the aws SDK docs https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CloudFormation.html#describeStacks-property.
 	 * @param {Object} params - An object that defines the cloudformation template to be validated.
 	 * @param {String} params.StackName - The name or the unique stack ID that is associated with the stack, which are not always interchangeable:
