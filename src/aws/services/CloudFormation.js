@@ -194,16 +194,19 @@ class CloudFormation extends AwsCloudFormation {
 				});
 			})
 			//Capturing Create Failure reason to run stack update for Existing stack
-			.catch((createResponse)=>{
-				if ('AlreadyExistsException' == createResponse.code){
-						return this.updateStack({
+			.catch((createError)=>{
+				if ('AlreadyExistsException' == createError.code){
+					return this.updateStack({
 						TemplateBody: cfTemplate,
 						StackName: name,
 						Parameters: params,
 						Capabilities: opts.capabilities,
 						Tags: opts.tags
 					});
-				}				
+				}
+				else{
+					return Promise.reject(createError);
+				}
 			})
 			.then((createResponse)=>{
 				let stackId = createResponse.StackId;
