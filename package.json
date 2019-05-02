@@ -1,7 +1,7 @@
 {
 	"name": "@monstermakes/larry-aws-product",
 	"description": "Larry Cli Module to expose an aws cloud formation template as a cli.",
-	"version": "0.0.7",
+	"version": "0.0.8",
 	"publishConfig": {},
 	"bin": {},
 	"files": [

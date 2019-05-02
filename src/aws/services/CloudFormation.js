@@ -211,9 +211,9 @@ class CloudFormation extends AwsCloudFormation {
 			.then((createResponse)=>{
 				let stackId = createResponse.StackId;
 				//use DescribeStacks API to test for completion (use exponential back off)
-				return this.awaitStackStatus(stackId,['CREATE_COMPLETE','CREATE_FAILED','ROLLBACK_COMPLETE','ROLLBACK_FAILED'])
+				return this.awaitStackStatus(stackId,['CREATE_COMPLETE','CREATE_FAILED','ROLLBACK_COMPLETE','ROLLBACK_FAILED','UPDATE_COMPLETE','UPDATE_FAILED','UPDATE_ROLLBACK_COMPLETE','UPDATE_ROLLBACK_FAILED'])
 					.then((lastUpdatedStatus)=>{
-						if(lastUpdatedStatus.StackStatus === 'CREATE_FAILED'){
+						if((lastUpdatedStatus.StackStatus === 'CREATE_FAILED') || (lastUpdatedStatus.StackStatus === 'UPDATE_FAILED') ){
 							let error = new Error(`Failed to deploy template, please see stack (${stackId}).`);
 							error.errorDetails = {
 								createResponse: createResponse,
