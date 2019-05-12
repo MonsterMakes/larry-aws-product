@@ -138,4 +138,4 @@ class ParameterStore extends AwsEcs {
 		return this.upgradeService(clusterName,serviceName,{desiredTaskCount},{forceNewDeployment});
 	}
 }
-module.exports = ParameterStore;
+module.exports = Ecs;
