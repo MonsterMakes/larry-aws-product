@@ -4,7 +4,7 @@ const AwsEcs = require('../aws-raw-services/AwsEcs');
 const _ = require('lodash');
 // const BackoffUtils = require('../../util/BackoffUtils');
 
-class ParameterStore extends AwsEcs {
+class Ecs extends AwsEcs {
 	constructor(awsConfig) {
 		super(awsConfig);
 	}
@@ -138,4 +138,4 @@ class ParameterStore extends AwsEcs {
 		return this.upgradeService(clusterName,serviceName,{desiredTaskCount},{forceNewDeployment});
 	}
 }
-module.exports = ParameterStore;
+module.exports = Ecs;
