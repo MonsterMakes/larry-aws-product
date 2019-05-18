@@ -8,5 +8,6 @@ module.exports.cliModules = {
 };
 module.exports.services = {
 	CloudFormation: require('./src/aws/services/CloudFormation'),
-	ParameterStore: require('./src/aws/services/ParameterStore')
+	ParameterStore: require('./src/aws/services/ParameterStore'),
+	Ecs: require('./src/aws/services/Ecs')
 };
