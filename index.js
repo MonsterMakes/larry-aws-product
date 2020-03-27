@@ -11,3 +11,14 @@ module.exports.services = {
 	ParameterStore: require('./src/aws/services/ParameterStore'),
 	Ecs: require('./src/aws/services/Ecs')
 };
+module.exports.AwsBase = require('./src/aws/AwsBase');
+module.exports.lib = {
+	environment: {
+		Environment: require('./src/lib/environment/Environment')
+	}
+};
+module.exports.test = {
+	utils: {
+		InquirerPromptAssertions: require('./test/util/InquirerPromptAssertions')
+	}
+};

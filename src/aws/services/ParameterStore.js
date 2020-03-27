@@ -38,6 +38,7 @@ class ParameterStore extends AwsParameterStore {
 						{
 							Type: paramDef.type || paramDef.Type || 'String',
 							Name: paramDef.name || paramDef.Name || paramDef,  //hidden feature for complex names
+							Value: paramDef.value || paramDef.Value || '',
 							Overwrite: paramDef.overwrite || opts.overwrite, //hidden feature for complex use cases
 							Description: paramDef.description || paramDef.Description || '',
 							Tags: tags //hidden feature for param specific tags (dont see a use case at this point but supported as a hidden feature)
@@ -238,13 +239,13 @@ class ParameterStore extends AwsParameterStore {
 				return getResponse.Parameters;
 			});
 	}
-	retrieveAllByPath(path){
+	retrieveAllByPath(path,opts={recursive:false, withDecryption:false}){
 		let nextToken = undefined;
 		let found = [];
 		let retrieveNext = ()=>{
 			return Promise.resolve()
 				.then(()=>{
-					return this.getParametersByPath({Path: path, NextToken: nextToken});
+					return this.getParametersByPath({Path: path, Recursive: opts.recursive, WithDecryption: opts.withDecryption, NextToken: nextToken});
 				})
 				.then((result)=>{
 					found = found.concat(result.Parameters);

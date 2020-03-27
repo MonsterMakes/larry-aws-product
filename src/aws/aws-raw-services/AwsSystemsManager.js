@@ -98,7 +98,7 @@ class AwsSystemsManager extends AwsBase {
 		});
 	}
 	/**
-	 * For more information see the aws SDK docs https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SSM.html#deleteParameters-property
+	 * For more information see the aws SDK docs https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SSM.html#getParametersByPath-property
 	 * @param {Object} params - The params request object
 	 * @param {Array.<String>} params.Path - Root path of the parameters to be retrieved.
 	 * @param {String} params.NextToken - A token to start the list. Use this token to get the next set of results.

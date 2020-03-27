@@ -16,10 +16,6 @@ Parameters:
     Description: Number of Subnets to create
     Type: String
     Default: 6
-  SubnetOffset:
-    Description: Offset of the subnet from the VPC CIDR
-    Type: String
-    Default: 8
 
 Resources:
   VPC:

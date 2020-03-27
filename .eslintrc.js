@@ -30,3 +30,26 @@ module.exports = {
 		]
 	}
 };
+
+// module.exports = {
+//     "env": {
+//         "commonjs": true,
+//         "es6": true,
+//         "node": true
+//     },
+//     "extends": [
+//         "eslint:recommended",
+//         "airbnb-base"
+//     ],
+//     "globals": {
+//         "Atomics": "readonly",
+//         "SharedArrayBuffer": "readonly"
+//     },
+//     "parserOptions": {
+//         "ecmaVersion": 2018
+//     },
+//     "rules": {
+//         "indent": ["error", 4],
+//         "max-classes-per-file": ["error", 3]
+//     }
+// };

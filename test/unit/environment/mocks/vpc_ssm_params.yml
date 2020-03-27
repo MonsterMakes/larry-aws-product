@@ -1,0 +1,21 @@
+Parameters:
+  EnvironmentName:
+    Description: Environment Name
+    Type: AWS::SSM::Parameter::Value<String>
+    AllowedPattern: ^[0-9a-z-]*$
+  VpcCIDR:
+    Description: VPC CIDR
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: 172.19.0.0/16
+  NumberOfSubnets:
+    Description: Number of Subnets to create
+    Type: AWS::SSM::Parameter::Value<Number>
+    Default: 4
+  SubnetOffset:
+    Description: Offset of the subnet from the VPC CIDR
+    Type: AWS::SSM::Parameter::Value<Number>
+    Default: 10
+
+Resources:
+    InternetGateway:
+      Type: AWS::EC2::InternetGateway  

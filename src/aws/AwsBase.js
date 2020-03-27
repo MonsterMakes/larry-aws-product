@@ -1,58 +1,30 @@
 'use strict';
 //This is required before aws-sdk is "required" to pull the config/credentials from the ~/.aws/credentials & ~/.aws/config files.
-process.env.AWS_SDK_LOAD_CONFIG = true;
+process.env.AWS_SDK_LOAD_CONFIG=true;
 const AWS = require('aws-sdk');
 
 const EventEmitter = require('events');
 const _ = require('lodash');
-const uuid = require('uuid');
 
 class AwsBase extends EventEmitter{
-	constructor(awsConfig) {
+	constructor(awsConfig={profile:undefined,region:undefined,credentials:{accessKeyId:undefined, secretAccessKey:undefined, sessionToken:undefined}}) {
 		super();
 		this._awsSdk = AWS;
-		this._uuid = uuid;
 		
 		//load the aws config
 		this.loadAwsConfig(awsConfig);
 	}
+	static retreiveAwsConfig(config={profile:undefined,region:undefined,credentials:{accessKeyId:undefined, secretAccessKey:undefined, sessionToken:undefined}}) {
+		if(config.profile){
+			process.env.AWS_PROFILE=config.profile;
+		}
+		let credentials = new AWS.SharedIniFileCredentials({profile: config.profile, accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey, sessionToken: config.sessionToken});
+		return new AWS.Config({profile: config.profile, credentials, region: config.region});
+
+	}
 	/*************************************************************/
 	/* START AWS CONFIG METHODS */
 	/*************************************************************/
-	_getDefaultConfig() {
-		let defaultConfig = {
-			region: undefined,
-			credentials: {
-				accessKeyId: undefined,
-				secretAccessKey: undefined
-			}
-		};
-		return defaultConfig;
-	}
-	_loadConfigFromAwsUserConfig() {
-		if(!this._defaultAwsUserConfig){
-			var credentials = new AWS.SharedIniFileCredentials();
-			AWS.config.credentials = credentials;
-			this._defaultAwsUserConfig = {
-				region: this._awsSdk.config.region,
-				credentials: {
-					accessKeyId: credentials.accessKeyId,
-					secretAccessKey: credentials.secretAccessKey
-				}
-			};
-		}
-		return this._defaultAwsUserConfig;
-	}
-	_loadConfigFromEnvironment() {
-		let configFromEnv = {
-			region: process.env.AWS_REGION,
-			credentials: {
-				accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-				secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-			}
-		};
-		return configFromEnv;
-	}
 	/**
 	 * @typedef AwsServiceConfiguration
 	 * @type Object
@@ -63,17 +35,14 @@ class AwsBase extends EventEmitter{
 	 * @param config {AwsServiceConfiguration} - The aws sdk service configuration object.
 	 * @returns {AwsServiceConfiguration} the fully loaded aws sdk service configuration object.
 	 */
-	loadAwsConfig(config) {
-		let defaultConfig = this._getDefaultConfig();
-		let configFromEnvironment = this._loadConfigFromEnvironment();
-		let awsUserConfig =this._loadConfigFromAwsUserConfig();
-		this._loadedAwsConfig = _.merge({},defaultConfig, awsUserConfig, configFromEnvironment, config);
-		//load the AWS config
-		this._awsSdk.config.update(this._loadedAwsConfig);
-		return this._loadedAwsConfig;
+	loadAwsConfig(config={profile:undefined,region:undefined,credentials:{accessKeyId:undefined, secretAccessKey:undefined, sessionToken:undefined}}) {
+		this._awsSdk.config = AwsBase.retreiveAwsConfig(config);
+		// if(config.region){
+		// 	this._awsSdk.config.region = config.region;
+		// }
 	}
 	getLoadedConfig(){
-		return this._loadedAwsConfig;
+		return this._awsSdk.config;
 	}
 	/*************************************************************/
 	/* END AWS CONFIG METHODS */

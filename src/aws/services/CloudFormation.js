@@ -8,66 +8,6 @@ class CloudFormation extends AwsCloudFormation {
 	constructor(awsConfig) {
 		super(awsConfig);
 	}
-	/**
-	 * Convert AWS cloud formation params into an array of inquirer (https://www.npmjs.com/package/inquirer) prompts.
-	 * @param {*} params 
-	 */
-	convertParametersToPrompts(params){
-		let prompts = [];
-		params.forEach((param)=>{
-			let type = 'String';
-			let dflt = param.DefaultValue;
-			let description = param.Description;
-			let name = param.ParameterKey;
-			let validate = undefined;
-
-			switch(param.ParameterType){
-			case 'String':
-				validate = (input)=>{
-					let result = true;
-					if(param.hasOwnProperty('AllowedPattern')){
-						if(!input.match(param.AllowedPattern)){
-							result = `Invalid format, must be of type ${param.AllowedPattern}.`;
-						}
-					}
-					return result;
-				};
-				break;
-			//An integer or float. AWS CloudFormation validates the parameter value as a number; however, when you use the parameter elsewhere in your template (for example, by using the Ref intrinsic function), the parameter value becomes a string.
-			case 'Number':
-			//An array of integers or floats that are separated by commas. AWS CloudFormation validates the parameter value as numbers; however, when you use the parameter elsewhere in your template (for example, by using the Ref intrinsic function), the parameter value becomes a list of strings.
-			//For example, users could specify "80,20", and a Ref would result in ["80","20"].
-			case 'List<Number>': // eslint-disable-line
-			//An array of literal strings that are separated by commas. The total number of strings should be one more than the total number of commas. Also, each member string is space trimmed.
-			//For example, users could specify "test,dev,prod", and a Ref would result in ["test","dev","prod"].
-			case 'CommaDelimitedList':// eslint-disable-line
-			//AWS values such as Amazon EC2 key pair names and VPC IDs. For more information, see AWS-Specific Parameter Types (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html#aws-specific-parameter-types).
-			case 'AWS-Specific Parameter Types':// eslint-disable-line
-			//Parameters that correspond to existing parameters in Systems Manager Parameter Store. You specify a Systems Manager parameter key as the value of the SSM parameter, and AWS CloudFormation fetches the latest value from Parameter Store to use for the stack. For more information, see SSM Parameter Types (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html#aws-ssm-parameter-types).
-			case 'SSM Parameter Types':// eslint-disable-line
-				throw new Error(`ParameterType (${param.ParameterType}) not yet supported!`);
-			}
-
-			let message = description + ' => ' || `Please enter a ${type} for ${name} => `;
-
-			let prompt = {
-				type: type,
-				name: name,
-				default: dflt,
-				validate: (input)=>{
-					let result = true;
-					if(param.ParameterConstraints.hasOwnProperty('AllowedValues')){
-						result = param.ParameterConstraints.AllowedValues.includes(input);
-					}
-					return result && validate();
-				},
-				message: message,
-				description: description
-			};
-			prompts.push(prompt);
-		});
-		return prompts;
-	}
 	loadParamsFromCloudFormationTemplates(...filePaths){
 		let paths = _.flattenDeep(filePaths);
 		let parameters = [];
@@ -76,13 +16,14 @@ class CloudFormation extends AwsCloudFormation {
 		for(let path of paths) {
 			prom = prom.then(()=>{
 				return this.retrieveParametersFromFile(path)
-					.then((data)=>{
-						parameters = parameters.concat(data);
-						return parameters;
+					.then((retrievedParams)=>{
+						parameters = parameters.concat(retrievedParams);
 					});
 			});
 		}
-		return prom;
+		return prom.then(()=>{
+			return parameters;
+		});
 	}
 	retrieveParametersFromFile(fileUrl){
 		return Promise.resolve()
@@ -181,14 +122,29 @@ class CloudFormation extends AwsCloudFormation {
 			60000 //dont delay any more than 5 minutes
 		);
 	}
+	_createAwsRequestArrayFromObj(params,usePrevious=false){
+		const paramsArr = [];
+		Object.keys(params).forEach((prmName)=>{
+			paramsArr.push({
+				ParameterKey: prmName,
+				ParameterValue: String(params[prmName]),
+				UsePreviousValue: usePrevious
+			});
+		});
+		return paramsArr;
+	}
 	deployTemplate(name,cfTemplate,params,opts={capabilities:undefined,tags:undefined}){
+		let paramsReq = params;
+		if(_.isPlainObject(params)){
+			paramsReq = this._createAwsRequestArrayFromObj(params);
+		}
 		return Promise.resolve()
 			.then(()=>{
 				//TODO normalize params
 				return this.createStack({
 					TemplateBody: cfTemplate,
 					StackName: name,
-					Parameters: params,
+					Parameters: paramsReq,
 					Capabilities: opts.capabilities,
 					Tags: opts.tags
 				});
