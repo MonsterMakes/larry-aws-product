@@ -1,11 +1,9 @@
 'use strict';
 
-const AwsBase = require('../AwsBase');
-
-class AwsEcs extends AwsBase {
-	constructor(awsConfig) {
-		super(awsConfig);
-		this._awsEcsSdk = new this._awsSdk.ECS();
+class AwsEcs {
+	constructor() {
+		const awsSdk = require('../AwsSdk');
+		this._awsEcsSdk = new awsSdk.ECS();
 	}
 	/**
 	 * For more information see the aws SDK docs https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ECS.html#registerTaskDefinition-property.

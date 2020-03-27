@@ -4,8 +4,8 @@ const AwsParameterStore = require('../aws-raw-services/AwsSystemsManager');
 const BackoffUtils = require('../../util/BackoffUtils');
 
 class ParameterStore extends AwsParameterStore {
-	constructor(awsConfig) {
-		super(awsConfig);
+	constructor() {
+		super();
 	}
 	_getAwsTagsFromPlainObject(tagsObj){
 		let awsTags = [];

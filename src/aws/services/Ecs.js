@@ -5,8 +5,8 @@ const _ = require('lodash');
 // const BackoffUtils = require('../../util/BackoffUtils');
 
 class Ecs extends AwsEcs {
-	constructor(awsConfig) {
-		super(awsConfig);
+	constructor() {
+		super();
 	}
 	/**
 	 * Retireve the service or reject if not found.

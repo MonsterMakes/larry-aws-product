@@ -1,9 +1,11 @@
 {
 	"name": "@monstermakes/larry-aws-product",
 	"description": "Larry Cli Module to expose an aws cloud formation template as a cli.",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"publishConfig": {},
-	"bin": {},
+	"bin": {
+		"larry-aws-product-cli": "./bin/larry-aws-product.cli"
+	},
 	"files": [
 		"bin",
 		"src",
@@ -23,10 +25,10 @@
 		"readiness-check": "echo '=> Checking Readiness' && npm test",
 		"prepublishOnly": "npm test",
 		"clean": "echo '=> Cleaning built assets...' && rm -rf .nyc_output coverage",
-		"lint": "echo '=> Linting...' && eslint {src,test}/**/*.js",
-		"lint-fix": "echo '=> Fixing Linting errors...' && eslint {src,test}/**/*.js --fix",
-		"test-unit": "echo '=> Running Tests...' && mocha -u tdd --timeout 60000 --colors test/unit/**/*.spec.js",
-		"watch-test-unit": "echo '=> Running Test Watcher...' && mocha --watch test/unit/**/*.spec.js",
+		"lint": "echo '=> Linting...' && eslint '{src,test}/**/*.js'",
+		"lint-fix": "echo '=> Fixing Linting errors...' && eslint '{src,test}/**/*.js' --fix",
+		"test-unit": "echo '=> Running Tests...' && mocha -u tdd --timeout 60000 --colors 'test/unit/**/*.spec.js'",
+		"watch-test-unit": "echo '=> Running Test Watcher...' && mocha --watch 'test/unit/**/*.spec.js'",
 		"test-unit-coverage": "echo '=> Running Tests w/ Coverage...' && nyc npm run test-unit && nyc --reporter=html report && nyc --lines 0 --functions 0 --branches 0 --per-file check-coverage"
 	},
 	"dependencies": {

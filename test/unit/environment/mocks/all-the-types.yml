@@ -1,0 +1,30 @@
+Parameters:
+  Environment:
+    Description: Environment Name
+    Type: String
+  VpcCIDR:
+    Description: VPC CIDR
+    Type: String
+    Default: 172.19.0.0/16
+  DatabaseCount:
+    Type: Number
+  NodeCount:
+    Type: Number
+    Default: 1
+  Encrypted:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+  Password:
+    Type: String
+    NoEcho: true
+  Username:
+    Type: String
+    Default: 'usprod'
+    NoEcho: true
+
+Resources:
+    InternetGateway:
+      Type: AWS::EC2::InternetGateway

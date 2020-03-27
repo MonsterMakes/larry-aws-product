@@ -1,9 +1,10 @@
 'use strict';
 const _ = require('lodash');
 const CliModule = require('@monstermakes/larry-cli').CliModule;
-const LarryAwsProduct = require('@monstermakes/larry-aws-product');
+const LarryAwsProduct = require('../../index');
 const Environment = LarryAwsProduct.lib.environment.Environment;
-const CLOUD_FORMATION_TEMPLATES_DIR = __dirname+'/../cloud-formation';
+const pathUtils = require('path');
+
 const AWS_PROFILE_PROMPT = {
 	type:'String',
 	name:'AwsProfile',
@@ -32,7 +33,7 @@ const ENVIRONMENT_NAME_PROMPT = {
 			}
 		}
 		else{
-			result = `Invalid format, a value must be supplied.`;
+			result = 'Invalid format, a value must be supplied.';
 		}
 		return result;
 	}
@@ -127,11 +128,15 @@ class EnvironmentCliModule extends CliModule {
 	constructor(vorpalInstance){
 		super(vorpalInstance);
 		this._initialPrompt = undefined;
+		this._environmentBaseDir = process.cwd();
 		this._clearState();	
 		this._init();
 	}
 	_clearState(){
 		this._environment = null;
+	}
+	_getEnvironmentCloudFormationDir(){
+		return pathUtils.join(this._environmentBaseDir,'cloud-formation');
 	}
 	_createAndLoadNewEnvironmentClass(envName,awsConfig){
 		if(this._environment){
@@ -139,7 +144,7 @@ class EnvironmentCliModule extends CliModule {
 			this._environment.shutdown();
 		}
 		//TODO set cloudFormationTemplatePattern to '**/*.@(yml|yaml)'
-		this._environment = new Environment(envName,CLOUD_FORMATION_TEMPLATES_DIR,{cloudFormationTemplatePattern: 'platform/vpc.yml',awsConfig});
+		this._environment = new Environment(envName,this._getEnvironmentCloudFormationDir(),{cloudFormationTemplatePattern: 'platform/vpc.yml',awsConfig});
 	}
 	/*********************************************************/
 	/* START PROMPT HELPER METHODS */
@@ -150,11 +155,24 @@ class EnvironmentCliModule extends CliModule {
 	/* START CLI ACTION DEFINITION METHODS */
 	/*********************************************************/
 	_init(){	
+		this._initSetEnvironmentDir();
 		this._initSetProfileAction();
 		this._initSetRegionAction();
 		this._initSetEnvironmentAction();
 		this._initLoadAction();
 		this._initDeployAction();
+	}
+	_initSetEnvironmentDir(){
+		this._vorpalInstance
+			.command('set-environment-dir <environmentBaseDir>', 'Set the base directory of the Envrionemnt project.')
+			.action((args, callback) => {
+				return Promise.resolve()
+					.then(()=>{
+						this._environmentBaseDir = args.environmentBaseDir;
+					})
+					.then(callback)
+					.catch(callback);
+			});
 	}
 	_initSetProfileAction(){
 		this._vorpalInstance
@@ -164,7 +182,7 @@ class EnvironmentCliModule extends CliModule {
 					.then(()=>{
 						if(this._environment){
 							//If there is no region associated with this aws Profile grab the one from the current env
-							let region = LarryAwsProduct.AwsBase.retreiveAwsConfig({profile: args.profileName}).region;
+							let region = LarryAwsProduct.AwsConfigSingleton.retreiveAwsConfig({profile: args.profileName}).region;
 							if(!region){
 								region = this._environment.getEnvironmentRegion();
 								this._vorpalInstance.log(`[${args.profileName}] does not include a region using currently loaded region (${region})`);
@@ -353,7 +371,7 @@ class EnvironmentCliModule extends CliModule {
 									
 									return Promise.resolve()
 										.then(()=>{
-											let defaultRegionForProfile = LarryAwsProduct.AwsBase.retreiveAwsConfig({profile: _.get(envProfileVals,'AwsProfile')}).region;
+											let defaultRegionForProfile = LarryAwsProduct.AwsConfigSingleton.retreiveAwsConfig({profile: _.get(envProfileVals,'AwsProfile')}).region;
 											if(!defaultRegionForProfile){
 												return this._vorpalInstance.activeCommand.prompt([REGION_NAME_PROMPT]);
 											}

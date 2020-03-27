@@ -1,11 +1,9 @@
 'use strict';
 
-const AwsBase = require('../AwsBase');
-
-class AwsSystemsManager extends AwsBase {
-	constructor(awsConfig) {
-		super(awsConfig);
-		this._awsSystemsManagerSdk = new this._awsSdk.SSM();
+class AwsSystemsManager {
+	constructor() {
+		const awsSdk = require('../AwsSdk');
+		this._awsSystemsManagerSdk = new awsSdk.SSM();
 	}
 	/**
 	 * For more information see the aws SDK docs https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SSM.html#putParameter-property

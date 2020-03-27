@@ -1,11 +1,9 @@
 'use strict';
 
-const AwsBase = require('../AwsBase');
-
-class AwsCloudFormation extends AwsBase {
-	constructor(awsConfig) {
-		super(awsConfig);
-		this._awsCloudFormationSdk = new this._awsSdk.CloudFormation();
+class AwsCloudFormation {
+	constructor() {
+		const awsSdk = require('../AwsSdk');
+		this._awsCloudFormationSdk = new awsSdk.CloudFormation();
 	}
 	/**
 	 * For more information see the aws SDK docs https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CloudFormation.html#validateTemplate-property.

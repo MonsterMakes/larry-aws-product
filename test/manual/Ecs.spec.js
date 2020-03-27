@@ -15,7 +15,6 @@ const Ecs = require('../../src/aws/services/Ecs');
 /***********************************************************/
 /***********************************************************/
 const CLUSTER_NAME = process.env.CLUSTER_NAME;
-const REGION = process.env.REGION;
 const SERVICE_NAME = process.env.SERVICE_NAME;
 const CONTAINER_NAME = process.env.CONTAINER_NAME;
 const CONTAINER_VERSION = process.env.CONTAINER_VERSION;
@@ -23,7 +22,7 @@ const CONTAINER_VERSION = process.env.CONTAINER_VERSION;
 /***********************************************************/
 /***********************************************************/
 
-const ecs = new Ecs({region:REGION});
+const ecs = new Ecs();
 
 describe(TEST_NAME, () => {
 	before(() => {

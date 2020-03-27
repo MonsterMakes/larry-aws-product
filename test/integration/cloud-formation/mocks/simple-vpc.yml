@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description:
+  The vpc which consists of a 1 AZ VPC with 1 public subnets.
+
+Parameters:
+  EnvironmentName:
+    Description: Environment Name
+    Type: String
+    AllowedPattern: ^[0-9a-z-]*$
+  VpcCIDR:
+    Description: VPC CIDR
+    Type: String
+    Default: 10.10.0.0/16
+  NumberOfSubnets:
+    Description: Number of Subnets to create
+    Type: String
+    Default: 6
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Join [ '-', [!Ref EnvironmentName, 'vpc' ]]
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+Outputs:
+  Vpc:
+    Description: VPC
+    Value: !Ref VPC
+    Export:
+      Name: !Join [ ':', [ !Ref 'EnvironmentName', 'Vpc' ] ]
+  VpcCIDR:
+    Description: VPC CIDR
+    Value: !Ref VpcCIDR
+    Export:
+      Name: !Join [ ':', [ !Ref 'EnvironmentName', 'VpcCIDR' ] ]

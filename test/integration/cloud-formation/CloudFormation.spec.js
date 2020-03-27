@@ -5,6 +5,7 @@ const expect = chai.expect;//eslint-disable-line
 
 const TEST_NAME = 'Test Cloud Formation deployment Service';
 const CloudFormation = require('../../../src/aws/services/CloudFormation');
+const AwsConfig = require('../../../src/aws/AwsConfigSingleton');
 
 /*
 const Executioner = require('larry-executioner').TheExecutioner;
@@ -81,13 +82,13 @@ const tearDownVpcCommands = [
 	}
 ]; */
 
-const cloudFormation = new CloudFormation({region:'us-west-2'});
+const cloudFormation = new CloudFormation();
 
 describe(TEST_NAME, () => {
 	before(() => {
 		console.log('-------------------------------------------------------');//eslint-disable-line
 		console.log('TESTS RUNNING USING:');//eslint-disable-line
-		console.log(JSON.stringify(cloudFormation.getLoadedConfig()));//eslint-disable-line
+		console.log(AwsConfig.printConnectionDetails());//eslint-disable-line
 		console.log('-------------------------------------------------------');//eslint-disable-line
 	});
 	it('should create a stack and tear it down after completion', ()=>{

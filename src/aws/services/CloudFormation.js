@@ -5,8 +5,8 @@ const AwsCloudFormation = require('../aws-raw-services/AwsCloudFormation');
 const BackoffUtils = require('../../util/BackoffUtils');
 
 class CloudFormation extends AwsCloudFormation {
-	constructor(awsConfig) {
-		super(awsConfig);
+	constructor() {
+		super();
 	}
 	loadParamsFromCloudFormationTemplates(...filePaths){
 		let paths = _.flattenDeep(filePaths);

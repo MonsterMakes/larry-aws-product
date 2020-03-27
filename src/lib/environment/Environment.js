@@ -2,7 +2,8 @@
 const _ = require('lodash');
 const glob = require('glob');
 const pathUtils = require('path');
-const CloudFormation = require('../../../index').services.CloudFormation;
+const LarryAwsProduct = require('../../../index');
+const CloudFormation = LarryAwsProduct.services.CloudFormation;
 //const Automaton = require('@monstermakes/larry-automata').Automaton;
 const CF_TEMP_PATTERN = '**/*.@(yml|yaml)';
 
@@ -12,8 +13,9 @@ class Environment{
 		this._environmentName = environmentName;
 		this._cloudFormationDir = cloudFormationDir;
 		this._cloudFormationTemplatePattern = _.get(opts,'cloudFormationTemplatePattern',CF_TEMP_PATTERN);
-		//setup aws sdks
-		this._cloudFormation = new CloudFormation(opts.awsConfig);
+		//setup aws config
+		this.setAwsConfig(opts.awsConfig);
+		this._cloudFormation = new CloudFormation();
 		this._clearState();
 	}
 	_clearState(){
@@ -28,7 +30,7 @@ class Environment{
 	/**
 	 * Convert AWS cloud formation params into an array of inquirer (https://www.npmjs.com/package/inquirer) prompts.
 	 */
-	_convertParametersToPrompts(){
+	_convertParametersToPrompts(cloudFormationParams){
 		let prompts = [];
 		this._cloudFormationParams.forEach((param)=>{
 			let type = 'String';
@@ -122,9 +124,6 @@ class Environment{
 		});
 		return prompts;
 	}
-	retrieveEnvironmentPrompts(promptNamesToIgnore=[]){
-		return this._cloudFormation.convertDirectoryOfCloudFormationTemplatesParametersIntoPrompts(this._cloudFormationDir,'**/*vpc.yml',promptNamesToIgnore);
-	}
 	/*********************************************************/
 	/* END INQUIRER PROMPT METHODS */
 	/* START CLOUD FORMATION METHODS */
@@ -149,56 +148,62 @@ class Environment{
 			});
 	}
 	_loadCloudFormationParams(){
-		return Promise.resolve()
-			.then(()=>{
-				if(!this._cloudFormationTemplatePaths){
-					return this._loadAllEnvironmentCloudFormationTemplates();
-				}
-				else{
-					return this._cloudFormationTemplatePaths;
-				}
-			})
-			.then((cloudFormationTemplatePaths)=>{
-				let parameters = [];
-				let prom = Promise.resolve();
-				//loop through all the cloud formation templates and load up all the parameters
-				for(let relCFPath of cloudFormationTemplatePaths) {
-					const path = pathUtils.join(this._cloudFormationDir,relCFPath);
-					prom = prom.then(()=>{
-						return this._cloudFormation.loadParamsFromCloudFormationTemplates(path)
-							.then((retrievedParams)=>{
-								retrievedParams.forEach((rp)=>{
-									rp._meta = {
-										_retrievedFrom: pathUtils.relative(this._cloudFormationDir,path)
-									};
-								});
-								parameters = parameters.concat(retrievedParams);
-							});
-					});
-				}
-				return prom.then(()=>{
-					return parameters;
-				});
-			})
-			//dedupe the params
-			.then((params)=>{
-				let foundPreviously = {};
-				//first parameter wins based on ParameterKey value
-				let deDupedParams = params.filter((param) => {
-					if(foundPreviously.hasOwnProperty(param.ParameterKey)){
-						return false;
+		if(this._cloudFormationParams){
+			return Promise.resolve(this._cloudFormationParams);
+		}
+		else {
+			return Promise.resolve()
+				.then(()=>{
+					if(!this._cloudFormationTemplatePaths){
+						return this._loadAllEnvironmentCloudFormationTemplates();
 					}
 					else{
-						foundPreviously[param.ParameterKey]=true;
-						return true;
+						return this._cloudFormationTemplatePaths;
 					}
+				})
+				.then((cloudFormationTemplatePaths)=>{
+					let parameters = [];
+					let prom = Promise.resolve();
+					//loop through all the cloud formation templates and load up all the parameters
+					for(let relCFPath of cloudFormationTemplatePaths) {
+						const path = pathUtils.join(this._cloudFormationDir,relCFPath);
+						prom = prom.then(()=>{
+							return this._cloudFormation.loadParamsFromCloudFormationTemplates(path)
+								.then((retrievedParams)=>{
+									retrievedParams.forEach((rp)=>{
+										rp._meta = {
+											_retrievedFrom: pathUtils.relative(this._cloudFormationDir,path)
+										};
+									});
+									parameters = parameters.concat(retrievedParams);
+								});
+						});
+					}
+					return prom.then(()=>{
+						return parameters;
+					});
+				})
+				//dedupe the params
+				.then((params)=>{
+					let foundPreviously = {};
+					//first parameter wins based on ParameterKey value
+					let deDupedParams = params.filter((param) => {
+						if(foundPreviously.hasOwnProperty(param.ParameterKey)){
+							return false;
+						}
+						else{
+							foundPreviously[param.ParameterKey]=true;
+							return true;
+						}
+					});
+					params = deDupedParams;
+					return params;
+				})
+				.then((dedupedParams)=>{
+					this._cloudFormationParams = dedupedParams;
+					return this._cloudFormationParams;
 				});
-				params = deDupedParams;
-				return params;
-			})
-			.then((dedupedParams)=>{
-				this._cloudFormationParams = dedupedParams;
-			});
+		}
 	}
 	_getNamespacedCloudFormationName(pathToTemplate){
 		let pathToTemplateNoExtension = pathToTemplate.split('.').slice(0, -1).join('.');
@@ -232,7 +237,10 @@ class Environment{
 	/* START STATE & GETTER SETTER METHODS */
 	/*********************************************************/
 	getAwsConfig(){
-		return this._cloudFormation.getLoadedConfig();
+		return LarryAwsProduct.AwsConfigSingleton.getLoadedConfig();
+	}
+	setAwsConfig(config){
+		LarryAwsProduct.AwsConfigSingleton.loadAwsConfig(config);
 	}
 	getAwsProfile(){
 		let awsCfg = this.getAwsConfig();
@@ -266,6 +274,15 @@ class Environment{
 	}
 	setEnvironmentParameterValues(values){
 		this._environmentParameterValues = values;
+	}
+	getEnvironmentParametersAsPrompts(){
+		return Promise.resolve()
+			.then(()=>{
+				return this._loadCloudFormationParams();
+			})
+			.then(()=>{
+				return this._convertParametersToPrompts(this._cloudFormationParams);
+			});
 	}
 	/*********************************************************/
 	/* END STATE & GETTER SETTER METHODS */
