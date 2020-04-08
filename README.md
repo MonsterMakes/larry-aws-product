@@ -1,3 +1,5 @@
+# THIS PROJECT IS NOW BEING MAINTAINED IN THE LARRY (https://github.com/MonsterMakes/larry) MONOREPO
+
 # larry-aws-product
 
 [![npm version](https://badge.fury.io/js/larry-aws-product.svg)](https://badge.fury.io/js/larry-aws-product)
