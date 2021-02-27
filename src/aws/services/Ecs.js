@@ -110,6 +110,8 @@ class Ecs extends AwsEcs {
 				delete newTaskDefinition.status;
 				delete newTaskDefinition.requiresAttributes;
 				delete newTaskDefinition.compatibilities;
+				delete newTaskDefinition.registeredAt;
+				delete newTaskDefinition.registeredBy;
 				return this._registerTaskDefinition(newTaskDefinition);
 			})
 			//update service
